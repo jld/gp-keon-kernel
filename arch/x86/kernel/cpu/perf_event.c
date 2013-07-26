@@ -75,7 +75,7 @@ copy_from_user_nmi(void *to, const void __user *from, unsigned long n)
 
 	} while (len < n);
 
-	return len;
+	return n - len;
 }
 
 struct event_constraint {
@@ -1817,12 +1817,10 @@ perf_callchain_user32(struct pt_regs *regs, struct perf_callchain_entry *entry)
 
 	fp = compat_ptr(regs->bp);
 	while (entry->nr < PERF_MAX_STACK_DEPTH) {
-		unsigned long bytes;
 		frame.next_frame     = 0;
 		frame.return_address = 0;
 
-		bytes = copy_from_user_nmi(&frame, fp, sizeof(frame));
-		if (bytes != sizeof(frame))
+		if (copy_from_user_nmi(&frame, fp, sizeof(frame)))
 			break;
 
 		if (fp < compat_ptr(regs->sp))
@@ -1863,12 +1861,10 @@ perf_callchain_user(struct perf_callchain_entry *entry, struct pt_regs *regs)
 		return;
 
 	while (entry->nr < PERF_MAX_STACK_DEPTH) {
-		unsigned long bytes;
 		frame.next_frame	     = NULL;
 		frame.return_address = 0;
 
-		bytes = copy_from_user_nmi(&frame, fp, sizeof(frame));
-		if (bytes != sizeof(frame))
+		if (copy_from_user_nmi(&frame, fp, sizeof(frame)))
 			break;
 
 		if ((unsigned long)fp < regs->sp)

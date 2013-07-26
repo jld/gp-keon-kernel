@@ -71,7 +71,7 @@ copy_from_user_nmi(void *to, const void __user *from, unsigned long n)
 
 	} while (len < n);
 
-	return len;
+	return n - len;
 }
 
 #ifdef CONFIG_COMPAT
@@ -81,10 +81,8 @@ dump_user_backtrace_32(struct stack_frame_ia32 *head)
 	/* Also check accessibility of one struct frame_head beyond: */
 	struct stack_frame_ia32 bufhead[2];
 	struct stack_frame_ia32 *fp;
-	unsigned long bytes;
 
-	bytes = copy_from_user_nmi(bufhead, head, sizeof(bufhead));
-	if (bytes != sizeof(bufhead))
+	if (copy_from_user_nmi(bufhead, head, sizeof(bufhead)))
 		return NULL;
 
 	fp = (struct stack_frame_ia32 *) compat_ptr(bufhead[0].next_frame);
@@ -127,10 +125,8 @@ static struct stack_frame *dump_user_backtrace(struct stack_frame *head)
 {
 	/* Also check accessibility of one struct frame_head beyond: */
 	struct stack_frame bufhead[2];
-	unsigned long bytes;
 
-	bytes = copy_from_user_nmi(bufhead, head, sizeof(bufhead));
-	if (bytes != sizeof(bufhead))
+	if (copy_from_user_nmi(bufhead, head, sizeof(bufhead)))
 		return NULL;
 
 	oprofile_add_trace(bufhead[0].return_address);
