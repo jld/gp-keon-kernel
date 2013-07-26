@@ -117,7 +117,14 @@ DEFINE_OUTPUT_COPY(__output_skip, MEMCPY_SKIP)
 #define arch_perf_out_copy_user __copy_from_user_inatomic
 #endif
 
-DEFINE_OUTPUT_COPY(__output_copy_user, arch_perf_out_copy_user)
+static inline unsigned long perf_memcpy_from_user(void *to,
+						  const void __user *from,
+						  unsigned long n)
+{
+	return n - arch_perf_out_copy_user(to, from, n);
+}
+
+DEFINE_OUTPUT_COPY(__output_copy_user, perf_memcpy_from_user)
 
 #ifdef CONFIG_HAVE_PERF_USER_STACK_DUMP
 static inline bool arch_perf_have_user_stack_dump(void)
