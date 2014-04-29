@@ -57,6 +57,7 @@
 #include <linux/swapops.h>
 #include <linux/elf.h>
 #include <linux/gfp.h>
+#include <linux/perf_event.h>
 
 #include <asm/io.h>
 #include <asm/pgalloc.h>
@@ -2432,6 +2433,7 @@ static inline int pte_unmap_same(struct mm_struct *mm, pmd_t *pmd,
 
 static inline void cow_user_page(struct page *dst, struct page *src, unsigned long va, struct vm_area_struct *vma)
 {
+	perf_sw_event(PERF_COUNT_SW_COW_FAULTS, 1, 0, NULL, va);
 	/*
 	 * If the source page was a PFN mapping, we don't have
 	 * a "struct page" for it. We do a best-effort copy by
@@ -3216,6 +3218,8 @@ static int __do_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 				goto out;
 			}
 			charged = 1;
+			perf_sw_event(PERF_COUNT_SW_COW_FAULTS, 1, 0, NULL,
+			    address);
 			copy_user_highpage(page, vmf.page, address, vma);
 			__SetPageUptodate(page);
 		} else {
